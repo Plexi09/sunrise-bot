@@ -22,6 +22,18 @@ async def on_message(message):
     
     if message.content.startswith('!ping'):
         await message.channel.send('Pong!')
+    
+    if message.content.startswith('!hello'):
+        await message.channel.send('Hello!')
+
+    if message.content.startswith('!help'):
+        await message.channel.send('Commandes :`!ping`, `!hello`, `!ip`, `!web`')
+
+    if message.content.startswith('!ip'):
+        await message.channel.send('IP du serveur: play.sunrisenetwork.eu')
+
+    if message.content.startswith('!web'):
+        await message.channel.send('Site web du serveur: https://.sunrisenetwork.eu')
 
 
 intents = discord.Intents.default()
