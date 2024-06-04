@@ -6,15 +6,25 @@ load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
 CLIENT_ID = os.getenv('CLIENT_ID')
 
-class Client(discord.Client):
-    async def on_ready(self):
-        print(f"Logged on as {self.user}!")
+intents = discord.Intents.default()
+intents.message_content = True
+client = discord.Client(intents=intents)
 
-    async def on_message(self, message):
-        print(f"Message from {message.author}: {message.content}")
+@client.event
+async def on_ready():
+    print(f"Logged on as {client.user}!")
+
+@client.event
+async def on_message(message):
+    print(f"Message from {message.author}: {message.content}")
+    if message.author == client.user:
+        return
+    
+    if message.content.startswith('!ping'):
+        await message.channel.send('Pong!')
+
 
 intents = discord.Intents.default()
 intents.message_content = True
 
-client = Client(intents=intents)
 client.run(BOT_TOKEN)
