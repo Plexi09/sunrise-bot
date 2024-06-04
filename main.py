@@ -40,14 +40,11 @@ async def on_ready():
 
 @client.event
 async def on_message(message):
-    print(f"Message from {message.author}: {message.content}")
-
     if message.author == client.user:
         return
-
     if message.content.startswith('!ping'):
         await handle_ping(message)
-    elif message.content.startswith('!hello'):
+    elif message.content.startswith('hello'):
         await handle_hello(message)
     elif message.content.startswith('!help'):
         await handle_help(message)
@@ -62,13 +59,15 @@ async def handle_ping(message):
     message_ping = await message.channel.send('Pong!')
     end_time = time.perf_counter()
     latency = (end_time - start_time) * 1000  # Convertir en millisecondes
-    await message_ping.edit(content=f'Pong! Latency: `{latency:.2f}ms`')
+    await message_ping.edit(content=f'Pong! Latency: `{latency:.2f}ms`\nDemandé par {message.author.mention}')
+    await message.delete()
 
 async def handle_hello(message):
     await message.channel.send(f'Bonjour {message.author.mention} !')
 
 async def handle_help(message):
     await message.channel.send(f'Commandes :`!ping`, `!hello`, `!ip`, `!web` \nDemandé par {message.author.mention}')
+    await message.delete()
 
 async def handle_ip(message):
     await message.channel.send(f'IP du serveur: `play.sunrisenetwork.eu` \nDemandé par {message.author.mention}')
@@ -76,6 +75,7 @@ async def handle_ip(message):
 
 async def handle_web(message):
     await message.channel.send(f'Site web du serveur: https://sunrisenetwork.eu \nDemandé par {message.author.mention}')
+    await message.delete()
 
 # Démarrage du bot
 client.run(BOT_TOKEN)
