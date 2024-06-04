@@ -33,7 +33,7 @@ async def on_message(message):
         await message.channel.send('IP du serveur: play.sunrisenetwork.eu')
 
     if message.content.startswith('!web'):
-        await message.channel.send('Site web du serveur: https://.sunrisenetwork.eu')
+        await message.channel.send('Site web du serveur: https://sunrisenetwork.eu')
 
 
 intents = discord.Intents.default()
