@@ -1,6 +1,9 @@
 import discord
 from dotenv import load_dotenv
 import os
+import logging
+
+handler = logging.FileHandler(filename='bot.log', encoding='utf-8', mode="w")
 
 load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
