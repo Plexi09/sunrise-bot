@@ -3,6 +3,7 @@ import os
 import interactions
 import time
 import asyncio
+import random
 
 # Chargement des variables d'environnement
 load_dotenv()
@@ -116,18 +117,19 @@ async def benchmark(ctx: interactions.CommandContext, duration: int):
             type=interactions.OptionType.INTEGER,
             required=True,
         ),
-            interactions.Option(
-                name="max",
-                description="Nombre maximum",
-                type=interactions.OptionType.INTEGER,
-                required=True,
+        interactions.Option(
+            name="max",
+            description="Nombre maximum",
+            type=interactions.OptionType.INTEGER,
+            required=True,
         )
     ]
 )
-async def random(ctx: interactions.CommandContext, duration: int):
-    min = ctx.options[0].value
-    max = ctx.options[1].value
-    await ctx.send(f"Nombre aléatoire: {random.randint(min, max)}")
+async def random_command(ctx: interactions.CommandContext, min: int, max: int):
+    await random_number(ctx, min, max)
+async def random_number(ctx: interactions.CommandContext, min_value: int, max_value: int):
+    await ctx.send(f"Nombre aléatoire: {random.randint(min_value, max_value)}")
+
 
 # Démarrage du bot
 bot.start()
