@@ -1,11 +1,12 @@
-
 import discord
-from discord import app_commands
+from discord.ext import commands
 from dotenv import load_dotenv
 import os
 import time
 import logging
 import logging.handlers
+import statistics
+import asyncio
 
 # Configuration des logs
 logger = logging.getLogger('discord')
@@ -27,56 +28,81 @@ logger.addHandler(handler)
 # Chargement des variables d'environnement
 load_dotenv()
 BOT_TOKEN = os.getenv('BOT_TOKEN')
-CLIENT_ID = os.getenv('CLIENT_ID')
 
-# Configuration des intents et du client Discord
+# Configuration des intents et du bot
 intents = discord.Intents.default()
 intents.message_content = True
-client = discord.Client(intents=intents)
 
-# Définition des événements du bot
-@client.event
+bot = commands.Bot(command_prefix='>', intents=intents)
+
+@bot.event
 async def on_ready():
-    print(f"Logged on as {client.user}!")
+    print(f'Connecté en tant que {bot.user}!')
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-    if message.content.startswith('!ping'):
-        await handle_ping(message)
-    elif message.content.startswith('hello'):
-        await handle_hello(message)
-    elif message.content.startswith('!help'):
-        await handle_help(message)
-    elif message.content.startswith('!ip'):
-        await handle_ip(message)
-    elif message.content.startswith('!web'):
-        await handle_web(message)
-
-# Handlers pour les commandes spécifiques
-async def handle_ping(message):
+@bot.command(name='ping')
+async def ping(ctx):
     start_time = time.perf_counter()
-    message_ping = await message.channel.send('Pong!')
+    message = await ctx.send('Pong!')
     end_time = time.perf_counter()
     latency = (end_time - start_time) * 1000  # Convertir en millisecondes
-    await message_ping.edit(content=f'Pong! Latency: `{latency:.2f}ms`\nDemandé par {message.author.mention}')
-    await message.delete()
+    await message.edit(content=f'Pong! Latence: `{latency:.2f}ms`\nDemandé par {ctx.author.mention}')
+    await ctx.message.delete()
 
-async def handle_hello(message):
-    await message.channel.send(f'Bonjour {message.author.mention} !')
+@bot.command(name='hello')
+async def hello(ctx):
+    await ctx.send(f'Bonjour {ctx.author.mention}!')
 
-async def handle_help(message):
-    await message.channel.send(f'Commandes :`!ping`, `!hello`, `!ip`, `!web` \nDemandé par {message.author.mention}')
-    await message.delete()
+@bot.command(name='helpme')
+async def help_command(ctx):
+    commands_list = '`!ping`, `!hello`, `!ip`, `!web`, `!echo`, `!benchmark <durée>`'
+    await ctx.send(f'Commandes: {commands_list}\nDemandé par {ctx.author.mention}')
+    await ctx.message.delete()
 
-async def handle_ip(message):
-    await message.channel.send(f'IP du serveur: `play.sunrisenetwork.eu` \nDemandé par {message.author.mention}')
-    await message.delete()
+@bot.command(name='ip')
+async def ip(ctx):
+    await ctx.send(f'IP du serveur: `play.sunrisenetwork.eu`\nDemandé par {ctx.author.mention}')
+    await ctx.message.delete()
 
-async def handle_web(message):
-    await message.channel.send(f'Site web du serveur: https://sunrisenetwork.eu \nDemandé par {message.author.mention}')
-    await message.delete()
+@bot.command(name='web')
+async def web(ctx):
+    await ctx.send(f'Site web du serveur: https://sunrisenetwork.eu\nDemandé par {ctx.author.mention}')
+    await ctx.message.delete()
+
+@bot.command(name='echo')
+async def echo(ctx, *, message: str):
+    await ctx.send(message)
+    await ctx.message.delete()
+
+@bot.command(name='benchmark')
+async def benchmark(ctx, duration: int = None):
+    """Mesure de la latence du bot sur une durée donnée (en secondes)."""
+    if duration is None:
+        await ctx.send('Usage: `!benchmark <durée en secondes>`')
+        return
+
+    latencies = []
+
+    start_time = time.time()
+    while time.time() - start_time < duration:
+        ping_start = time.perf_counter()
+        message = await ctx.send('Benchmarking...')
+        ping_end = time.perf_counter()
+        latency = (ping_end - ping_start) * 1000  # Convertir en millisecondes
+        latencies.append(latency)
+        await message.delete()
+        await asyncio.sleep(1)  # Attendre une seconde avant le prochain ping
+
+    if latencies:
+        min_latency = min(latencies)
+        max_latency = max(latencies)
+        avg_latency = statistics.mean(latencies)
+        await ctx.send(f'Résultats du benchmark sur {duration} secondes:\n'
+                       f'Latence Min: `{min_latency:.2f}ms`\n'
+                       f'Latence Max: `{max_latency:.2f}ms`\n'
+                       f'Latence Moyenne: `{avg_latency:.2f}ms`\n'
+                       f'Demandé par {ctx.author.mention}')
+    else:
+        await ctx.send('Aucune donnée de latence collectée. Veuillez réessayer.')
 
 # Démarrage du bot
-client.run(BOT_TOKEN)
+bot.run(BOT_TOKEN)
