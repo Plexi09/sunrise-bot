@@ -153,7 +153,7 @@ def search_wiki(query):
     search_results = response.json()
     return search_results
 
-# Commande pour effectuer une recherche sur Google
+# Commande pour effectuer une recherche sur le wiki
 @bot.command(name='wiki')
 async def google(ctx, *, query: str):
     """: Effectuer une recherche sur le Wiki"""
@@ -174,7 +174,7 @@ def search_wikipedia(query):
         'format': 'json',
         'list': 'search',
         'srsearch': query,
-        'srlimit': 1,  # Limiter les résultats à un seul article
+        'srlimit': 1,
     }
     response = requests.get(url, params=params)
     search_results = response.json()
@@ -183,6 +183,7 @@ def search_wikipedia(query):
 # Commande pour effectuer une recherche sur Wikipédia
 @bot.command(name='ckoi')
 async def wikipedia_search(ctx, *, query: str):
+    """: Effectuer une recherche sur Wikipedia"""
     try:
         search_results = search_wikipedia(query)
         if 'query' in search_results and 'search' in search_results['query'] and search_results['query']['search']:
