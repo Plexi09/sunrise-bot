@@ -1,5 +1,5 @@
 import discord
-from discord.ext import commands
+from discord_slash import SlashCommand, SlashContext
 from dotenv import load_dotenv
 import os
 import time
@@ -32,50 +32,53 @@ CLIENT_ID = os.getenv('CLIENT_ID')
 intents = discord.Intents.default()
 intents.message_content = True
 client = discord.Client(intents=intents)
+slash = SlashCommand(client, sync_commands=True)  # Initializer les commandes slash
 
 # Définition des événements du bot
 @client.event
 async def on_ready():
     print(f"Logged on as {client.user}!")
 
-@client.event
-async def on_message(message):
-    if message.author == client.user:
-        return
-    if message.content.startswith('!ping'):
-        await handle_ping(message)
-    elif message.content.startswith('hello'):
-        await handle_hello(message)
-    elif message.content.startswith('!help'):
-        await handle_help(message)
-    elif message.content.startswith('!ip'):
-        await handle_ip(message)
-    elif message.content.startswith('!web'):
-        await handle_web(message)
-
 # Handlers pour les commandes spécifiques
-async def handle_ping(message):
+async def handle_ping(ctx: SlashContext):
     start_time = time.perf_counter()
-    message_ping = await message.channel.send('Pong!')
+    await ctx.send(content='Pong!')
     end_time = time.perf_counter()
     latency = (end_time - start_time) * 1000  # Convertir en millisecondes
-    await message_ping.edit(content=f'Pong! Latency: `{latency:.2f}ms`\nDemandé par {message.author.mention}')
-    await message.delete()
+    await ctx.edit(content=f'Pong! Latency: `{latency:.2f}ms`\nDemandé par {ctx.author.mention}')
 
-async def handle_hello(message):
-    await message.channel.send(f'Bonjour {message.author.mention} !')
+async def handle_hello(ctx: SlashContext):
+    await ctx.send(content=f'Bonjour {ctx.author.mention} !')
 
-async def handle_help(message):
-    await message.channel.send(f'Commandes :`!ping`, `!hello`, `!ip`, `!web` \nDemandé par {message.author.mention}')
-    await message.delete()
+async def handle_help(ctx: SlashContext):
+    await ctx.send(content=f'Commandes :`/ping`, `/hello`, `/ip`, `/web` \nDemandé par {ctx.author.mention}')
 
-async def handle_ip(message):
-    await message.channel.send(f'IP du serveur: `play.sunrisenetwork.eu` \nDemandé par {message.author.mention}')
-    await message.delete()
+async def handle_ip(ctx: SlashContext):
+    await ctx.send(content=f'IP du serveur: `play.sunrisenetwork.eu` \nDemandé par {ctx.author.mention}')
 
-async def handle_web(message):
-    await message.channel.send(f'Site web du serveur: https://sunrisenetwork.eu \nDemandé par {message.author.mention}')
-    await message.delete()
+async def handle_web(ctx: SlashContext):
+    await ctx.send(content=f'Site web du serveur: https://sunrisenetwork.eu \nDemandé par {ctx.author.mention}')
+
+# Slash command definitions
+@slash.slash(name="ping", description="Check the bot's latency")
+async def ping(ctx: SlashContext):
+    await handle_ping(ctx)
+
+@slash.slash(name="hello", description="Say hello")
+async def hello(ctx: SlashContext):
+    await handle_hello(ctx)
+
+@slash.slash(name="help", description="Get a list of available commands")
+async def help(ctx: SlashContext):
+    await handle_help(ctx)
+
+@slash.slash(name="ip", description="Get the server IP")
+async def ip(ctx: SlashContext):
+    await handle_ip(ctx)
+
+@slash.slash(name="web", description="Get the server website")
+async def web(ctx: SlashContext):
+    await handle_web(ctx)
 
 # Démarrage du bot
 client.run(BOT_TOKEN)
