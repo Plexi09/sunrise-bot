@@ -1,13 +1,22 @@
 import logging
-from dotenv import load_dotenv
 import os
-from interactions import slash_command, SlashContext, OptionType, slash_option, check, is_owner
-import interactions
 import time
 import asyncio
 import random
 import aiohttp
+from dotenv import load_dotenv
 from datetime import datetime
+import interactions
+from interactions import (
+    slash_command,
+    SlashContext,
+    OptionType,
+    slash_option,
+    ContextMenuContext,
+    Message, message_context_menu,
+    user_context_menu,
+    Member
+)
 
 # Configurer le logger
 logger = logging.getLogger(__name__)
