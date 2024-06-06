@@ -7,10 +7,13 @@ import time
 import asyncio
 import random
 import aiohttp
+from datetime import datetime
 
 # Configurer le logger
-logging.basicConfig(level=logging.INFO)  # Niveau de base pour les messages INFO
-logger = logging.getLogger(__name__) 
+logger = logging.getLogger(__name__)
+logger.setLevel(logging.INFO)
+timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+logging.basicConfig(filename=(f'logs/discord_{timestamp}.log'), level=logging.INFO, format='%(asctime)s - %(name)s - %(levelname)s - %(message)s')
 
 # Chargement des variables d'environnement
 load_dotenv()
