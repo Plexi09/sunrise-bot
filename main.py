@@ -18,7 +18,8 @@ from interactions import (
     Message, 
     message_context_menu,
     user_context_menu,
-    Member
+    Member,
+    listen
 )
 
 # Configurer le logger
@@ -41,9 +42,9 @@ import sys
 sys.stdout.reconfigure(encoding='utf-8')
 
 # Événement déclenché lorsque le bot est prêt
-@bot.event
+@listen()
 async def on_ready():
-    logger.info(f'Connecté en tant que {bot.me.name}')
+    print(f'Connecté en tant que {bot.user}')
 
 # Commande pour afficher l'IP du serveur
 @slash_command(name="ip", description="Affiche l'IP du serveur.")
@@ -64,6 +65,7 @@ async def echo_function(ctx: SlashContext, text: str):
     await ctx.send(f"{text}")
     logger.info(f"Commande exécutée par {ctx.author}: echo. Message: {text}")
 
+# Context Menu pour mentionner un utilisateur
 @user_context_menu(name="mention")
 async def ping(ctx: ContextMenuContext):
     member: Member = ctx.target
@@ -83,31 +85,35 @@ async def ping_function(ctx: SlashContext):
 @slash_command(name="benchmark",description="Mesure de la latence du bot")
 @slash_option(name="duration", description="Durée du benchmark en secondes" ,opt_type=OptionType.INTEGER, required=True,)
 async def benchmark_function(ctx: SlashContext, duration: int):
-    logger.info(f"Démarrage du benchmark par {ctx.author}")
-    latencies = []
+    enabled = False
+    if enabled:
+        logger.info(f"Démarrage du benchmark par {ctx.author}")
+        latencies = []
 
-    start_time = time.time()
-    while time.time() - start_time < duration:
-        ping_start = time.perf_counter()
-        message = await ctx.send("Benchmarking...")
-        await message.delete()
-        ping_end = time.perf_counter()
-        latency = (ping_end - ping_start) * 1000
-        latencies.append(latency)
-        await asyncio.sleep(1)
+        start_time = time.time()
+        while time.time() - start_time < duration:
+            ping_start = time.perf_counter()
+            message = await ctx.send("Benchmarking...")
+            await message.delete()
+            ping_end = time.perf_counter()
+            latency = (ping_end - ping_start) * 1000
+            latencies.append(latency)
+            await asyncio.sleep(1)
 
-    if latencies:
-        min_latency = min(latencies)
-        max_latency = max(latencies)
-        avg_latency = sum(latencies) / len(latencies)
-        await ctx.send(f"Résultats du benchmark sur {duration} secondes:\n"
-                       f"Latence Min: `{min_latency:.2f}ms`\n"
-                       f"Latence Max: `{max_latency:.2f}ms`\n"
-                       f"Latence Moyenne: `{avg_latency:.2f}ms`")
-        logger.info(f"Fin du benchmark sur {duration} secondes. Latency min: `{min_latency:.2f}ms. Latency max: `{max_latency:.2f}ms. Latency avg: `{avg_latency:.2f}ms")
+        if latencies:
+            min_latency = min(latencies)
+            max_latency = max(latencies)
+            avg_latency = sum(latencies) / len(latencies)
+            await ctx.send(f"Résultats du benchmark sur {duration} secondes:\n"
+                           f"Latence Min: `{min_latency:.2f}ms`\n"
+                           f"Latence Max: `{max_latency:.2f}ms`\n"
+                           f"Latence Moyenne: `{avg_latency:.2f}ms`")
+            logger.info(f"Fin du benchmark sur {duration} secondes. Latency min: `{min_latency:.2f}ms. Latency max: `{max_latency:.2f}ms. Latency avg: `{avg_latency:.2f}ms")
+        else:
+            await ctx.send("Aucune donnée de latence collectée.")
+            logger.warning(f"Aucune donnée de latence collectée lors du benchmark par {ctx.author}")
     else:
-        await ctx.send("Aucune donnée de latence collectée.")
-        logger.warning(f"Aucune donnée de latence collectée lors du benchmark par {ctx.author}")
+        await ctx.send("Le benchmark désactivé.",)
 
 # Commande pour générer un nombre aléatoire entre min et max
 @slash_command(name="random",description="Génère un nombre aléatoire")
@@ -170,12 +176,11 @@ async def wikipedia_function(ctx: SlashContext, recherche: str):
 @slash_option(name="recherche", description="Recherche à effectuer", opt_type=OptionType.STRING, required=True)
 async def wiki_function(ctx: SlashContext, recherche: str):
     search_engine_id = '567f0ad4fa4ff419d'
-    url = f'https://www.googleapis.com/customsearch/v1?key={GOOGLE_API_KEY}&cx={search_engine_id}&q={recherche}'
+    url = f'https://www.googleapis.com/customsearch/v1?key={GOOGLE_API_KEY}&cx={search_engine_id}&q={recherche}' 
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url) as response:
             search_results = await response.json()
-
     try:
         if 'items' in search_results:
             for result in search_results['items'][:1]:
@@ -188,6 +193,7 @@ async def wiki_function(ctx: SlashContext, recherche: str):
         await ctx.send(f"Une erreur s'est produite lors de la recherche: {e}")
         logger.error(f"Une erreur s'est produite lors de la recherche: {e}")
 
+# Context Menu pour signaler un message
 @message_context_menu(name="Signaler")
 async def repeat(ctx: ContextMenuContext):
     if ctx.guild is None:
@@ -196,7 +202,7 @@ async def repeat(ctx: ContextMenuContext):
 
     message: Message = ctx.target
     member: Member = message.author  # Obtention de l'auteur du message
-    target_channel_id = 1248358610455629824  # Remplacez par l'ID de votre salon spécifique
+    target_channel_id = 1248358610455629824
     target_channel = ctx.guild.get_channel(target_channel_id)
     message_link = f"https://discord.com/channels/{ctx.guild.id}/{message.channel.id}/{message.id}"
     staff_role = 1131596251650068521
@@ -204,6 +210,7 @@ async def repeat(ctx: ContextMenuContext):
     # Générer un UUID pour le signalement
     report_uuid = uuid.uuid4()
 
+    # Créer un fichier JSON pour les signalements
     timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
     report_data = {
         "uuid": str(report_uuid),
@@ -234,6 +241,7 @@ async def repeat(ctx: ContextMenuContext):
     with open("reports.json", "w", encoding="utf-8") as file:
         json.dump(reports, file, indent=4, ensure_ascii=False)
 
+    # Envoyer un message dans salon de signalements et en MP
     if target_channel:
         report_message = (
             f"🚨 Nouveau signalement par {ctx.author.mention} 🚨\n\n"
@@ -245,7 +253,7 @@ async def repeat(ctx: ContextMenuContext):
             f"<@&{staff_role}>"
         )
         dm_message = (
-            f"Merci pour votre signalement. Notre équipe de modération va examiner le message.\n"
+            f"Merci pour votre signalement. Notre équipe de modération va examiner le message.\n" 
             f"UUID du signalement: {report_uuid}\n\n"
             f"Message signalé:\n"
             f"`{message.content}`\n\n"
@@ -260,7 +268,7 @@ async def repeat(ctx: ContextMenuContext):
         try:
             await ctx.author.send(dm_message)
         except Exception as e:
-            print(f"Erreur lors de l'envoi du message privé: {e}")
+            print(f"Erreur lors de l'envoi du message privé: {e}") 
     else:
         await ctx.send("Le salon cible n'a pas été trouvé.")
 
