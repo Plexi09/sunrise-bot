@@ -5,6 +5,7 @@ import asyncio
 import random
 import aiohttp
 import uuid
+import json
 from dotenv import load_dotenv
 from datetime import datetime
 import interactions
@@ -67,8 +68,6 @@ async def web_function(ctx: SlashContext):
 async def echo_function(ctx: SlashContext, text: str):
     await ctx.send(f"{text}")
     logger.info(f"Commande exécutée par {ctx.author}: echo. Message: {text}")
-import uuid
-from interactions import ContextMenuContext, Message, Member
 
 @user_context_menu(name="mention")
 async def ping(ctx: ContextMenuContext):
@@ -230,9 +229,12 @@ async def wiki_function(ctx: SlashContext, recherche: str):
         await ctx.send(f"Une erreur s'est produite lors de la recherche: {e}")
         logger.error(f"Une erreur s'est produite lors de la recherche: {e}")
 
-
-@message_context_menu(name="Sigaler")
+@message_context_menu(name="Signaler")
 async def repeat(ctx: ContextMenuContext):
+    if ctx.guild is None:
+        await ctx.send("Cette commande ne peut pas être utilisée dans les messages privés.", ephemeral=True)
+        return
+
     message: Message = ctx.target
     member: Member = message.author  # Obtention de l'auteur du message
     target_channel_id = 1248358610455629824  # Remplacez par l'ID de votre salon spécifique
@@ -242,6 +244,36 @@ async def repeat(ctx: ContextMenuContext):
 
     # Générer un UUID pour le signalement
     report_uuid = uuid.uuid4()
+
+    timestamp = datetime.now().strftime("%Y-%m-%d_%H-%M-%S")
+    report_data = {
+        "uuid": str(report_uuid),
+        "reporter_id": ctx.author.id,
+        "reported_message_id": message.id,
+        "reported_message_content": message.content,
+        "reported_message_author_id": member.id,
+        "guild_id": ctx.guild.id,
+        "channel_id": message.channel.id,
+        "message_link": message_link,
+        "date": timestamp
+    }
+
+    # Charger les signalements existants
+    try:
+        with open("reports.json", "r", encoding="utf-8") as file:
+            try:
+                reports = json.load(file)
+            except json.JSONDecodeError:
+                reports = []  # Fichier vide ou corrompu
+    except FileNotFoundError:
+        reports = []  # Fichier non trouvé
+
+    # Ajouter le nouveau signalement
+    reports.append(report_data)
+
+    # Enregistrer les signalements mis à jour
+    with open("reports.json", "w", encoding="utf-8") as file:
+        json.dump(reports, file, indent=4, ensure_ascii=False)
 
     if target_channel:
         report_message = (
@@ -263,6 +295,7 @@ async def repeat(ctx: ContextMenuContext):
         )
 
         await target_channel.send(report_message)
+        await ctx.send("Merci pour votre signalement. Notre équipe de modération va examiner le message.", ephemeral=True)
         
         # Envoyer un message privé à l'utilisateur qui a fait le signalement
         try:
