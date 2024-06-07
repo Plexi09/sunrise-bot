@@ -4,6 +4,7 @@ import time
 import asyncio
 import random
 import aiohttp
+import uuid
 from dotenv import load_dotenv
 from datetime import datetime
 import interactions
@@ -13,7 +14,8 @@ from interactions import (
     OptionType,
     slash_option,
     ContextMenuContext,
-    Message, message_context_menu,
+    Message, 
+    message_context_menu,
     user_context_menu,
     Member
 )
@@ -65,6 +67,13 @@ async def web_function(ctx: SlashContext):
 async def echo_function(ctx: SlashContext, text: str):
     await ctx.send(f"{text}")
     logger.info(f"Commande exécutée par {ctx.author}: echo. Message: {text}")
+import uuid
+from interactions import ContextMenuContext, Message, Member
+
+@user_context_menu(name="mention")
+async def ping(ctx: ContextMenuContext):
+    member: Member = ctx.target
+    await ctx.send(member.mention)
 
 # Commande pour afficher "Pong!" avec la latence
 @slash_command(name="ping",description="Pong")
@@ -220,6 +229,48 @@ async def wiki_function(ctx: SlashContext, recherche: str):
     except Exception as e:
         await ctx.send(f"Une erreur s'est produite lors de la recherche: {e}")
         logger.error(f"Une erreur s'est produite lors de la recherche: {e}")
+
+
+@message_context_menu(name="Sigaler")
+async def repeat(ctx: ContextMenuContext):
+    message: Message = ctx.target
+    member: Member = message.author  # Obtention de l'auteur du message
+    target_channel_id = 1248358610455629824  # Remplacez par l'ID de votre salon spécifique
+    target_channel = ctx.guild.get_channel(target_channel_id)
+    message_link = f"https://discord.com/channels/{ctx.guild.id}/{message.channel.id}/{message.id}"
+    staff_role = 1131596251650068521
+
+    # Générer un UUID pour le signalement
+    report_uuid = uuid.uuid4()
+
+    if target_channel:
+        report_message = (
+            f"🚨 Nouveau signalement par {ctx.author.mention} 🚨\n\n"
+            f"UUID du signalement: {report_uuid}\n\n"
+            f"Message signalé:\n"
+            f"`{message.content}`\n\n"
+            f"Auteur du message: {member.mention}\n"
+            f"Lien du message: {message_link}\n"
+            f"<@&{staff_role}>"
+        )
+        dm_message = (
+            f"Merci pour votre signalement. Notre équipe de modération va examiner le message.\n"
+            f"UUID du signalement: {report_uuid}\n\n"
+            f"Message signalé:\n"
+            f"`{message.content}`\n\n"
+            f"Auteur du message: {member.mention}\n"
+            f"Lien du message: {message_link}\n"
+        )
+
+        await target_channel.send(report_message)
+        
+        # Envoyer un message privé à l'utilisateur qui a fait le signalement
+        try:
+            await ctx.author.send(dm_message)
+        except Exception as e:
+            print(f"Erreur lors de l'envoi du message privé: {e}")
+    else:
+        await ctx.send("Le salon cible n'a pas été trouvé.")
 
 # Démarrage du bot
 bot.start()
