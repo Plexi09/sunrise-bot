@@ -59,12 +59,7 @@ async def web_function(ctx: SlashContext):
 
 # Commande pour répéter le message de l'utilisateur
 @slash_command(name="echo",description="Répète le message de l'utilisateur")
-@slash_option(
-            name="text",
-            description="Texte à répéter",
-            opt_type=OptionType.STRING,
-            required=True,
-        )
+@slash_option(name="text", description="Texte à répéter", opt_type=OptionType.STRING, required=True)
 async def echo_function(ctx: SlashContext, text: str):
     await ctx.send(f"{text}")
     logger.info(f"Commande exécutée par {ctx.author}: echo. Message: {text}")
@@ -86,12 +81,7 @@ async def ping_function(ctx: SlashContext):
 
 # Commande pour effectuer un benchmark de latence
 @slash_command(name="benchmark",description="Mesure de la latence du bot")
-@slash_option(
-    name="duration",
-    description="Durée du benchmark en secondes",
-    opt_type=OptionType.INTEGER,
-    required=True,
-    )
+@slash_option(name="duration", description="Durée du benchmark en secondes" ,opt_type=OptionType.INTEGER, required=True,)
 async def benchmark_function(ctx: SlashContext, duration: int):
     logger.info(f"Démarrage du benchmark par {ctx.author}")
     latencies = []
@@ -121,18 +111,8 @@ async def benchmark_function(ctx: SlashContext, duration: int):
 
 # Commande pour générer un nombre aléatoire entre min et max
 @slash_command(name="random",description="Génère un nombre aléatoire")
-@slash_option(
-    name="min",
-    description="Nombre minimum",
-    opt_type=OptionType.INTEGER,
-    required=True,
-)
-@slash_option(
-    name="max",
-    description="Nombre maximum",
-    opt_type=OptionType.INTEGER,
-    required=True,
-)
+@slash_option(name="min", description="Nombre minimum", opt_type=OptionType.INTEGER, required=True)
+@slash_option(name="max", description="Nombre maximum", opt_type=OptionType.INTEGER, required=True)
 async def random_function(ctx: SlashContext, min: int, max: int):
     randomnumber = random.randint(min, max)
     await ctx.send(f"Nombre aléatoire: {randomnumber}")
@@ -140,12 +120,7 @@ async def random_function(ctx: SlashContext, min: int, max: int):
 
 # Commande pour rechercher sur Google
 @slash_command(name="google",description="Recherche sur Google")
-@slash_option(
-    name="recherche",
-    description="Recherche à effectuer",
-    opt_type=OptionType.STRING,
-    required=True
-)
+@slash_option(name="recherche", description="Recherche à effectuer", opt_type=OptionType.STRING, required=True)
 async def google_function(ctx: SlashContext, recherche: str):
     search_engine_id = '20f02a5ebf8234b5f'
     url = f'https://www.googleapis.com/customsearch/v1?key={GOOGLE_API_KEY}&cx={search_engine_id}&q={recherche}'
@@ -168,21 +143,10 @@ async def google_function(ctx: SlashContext, recherche: str):
 
 # Commande pour rechercher sur Wikipedia
 @slash_command(name="wikipedia",description="Recherche sur Wikipedia")
-@slash_option(
-    name="recherche",
-    description="Recherche à effectuer",
-    opt_type=OptionType.STRING,
-    required=True
-)
+@slash_option(name="recherche", description="Recherche à effectuer", opt_type=OptionType.STRING, required=True)
 async def wikipedia_function(ctx: SlashContext, recherche: str):
     url = f'https://fr.wikipedia.org/w/api.php'
-    params = {
-        'action': 'query',
-        'format': 'json',
-        'list': 'search',
-        'srsearch': recherche,
-        'srlimit': 1,
-    }
+    params = {'action': 'query', 'format': 'json', 'list': 'search', 'srsearch': recherche, 'srlimit': 1}
 
     async with aiohttp.ClientSession() as session:
         async with session.get(url, params=params) as response:
@@ -203,12 +167,7 @@ async def wikipedia_function(ctx: SlashContext, recherche: str):
 
 # Commande pour rechercher sur le Wiki
 @slash_command(name="wiki", description="Recherche sur le Wiki")
-@slash_option(
-    name="recherche",
-    description="Recherche à effectuer",
-    opt_type=OptionType.STRING,
-    required=True
-)
+@slash_option(name="recherche", description="Recherche à effectuer", opt_type=OptionType.STRING, required=True)
 async def wiki_function(ctx: SlashContext, recherche: str):
     search_engine_id = '567f0ad4fa4ff419d'
     url = f'https://www.googleapis.com/customsearch/v1?key={GOOGLE_API_KEY}&cx={search_engine_id}&q={recherche}'
