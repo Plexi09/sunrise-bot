@@ -138,7 +138,30 @@ async def google_function(interaction: discord.Interaction, recherche: str):
                 await interaction.response.send_message(f"{result['title']}: {result['link']}")
                 logger.info(f"Commande exécutée par {interaction.user}: Google. Recherche: {recherche}")
         else:
-            await interaction.response.send_message('Aucun résultat trouvé.')
+            await interaction.response.send_message(f'Aucun résultat trouvé pour {recherche}.')
+            logger.info(f"Aucun résultat trouvé pour la recherche '{recherche}' par {interaction.user}")
+    except Exception as e:
+        await interaction.response.send_message(f"Une erreur s'est produite lors de la recherche: {e}")
+        logger.error(f"Une erreur s'est produite lors de la recherche: {e}")
+
+# Commande pour rechercher sur le Wiki (Différente de /wikipedia)
+@bot.tree.command(name="wiki", description="Recherche sur le Wiki", guild=discord.Object(id=GUILD_ID))
+@app_commands.describe(recherche="Recherche à effectuer")
+async def google_function(interaction: discord.Interaction, recherche: str):
+    search_engine_id = '567f0ad4fa4ff419d'
+    url = f'https://www.googleapis.com/customsearch/v1?key={GOOGLE_API_KEY}&cx={search_engine_id}&q={recherche}'
+
+    async with aiohttp.ClientSession() as session:
+        async with session.get(url) as response:
+            search_results = await response.json()
+
+    try:
+        if 'items' in search_results:
+            for result in search_results['items'][:1]:
+                await interaction.response.send_message(f"{result['title']}: {result['link']}")
+                logger.info(f"Commande exécutée par {interaction.user}: Wiki. Recherche: {recherche}")
+        else:
+            await interaction.response.send_message(f'Aucun résultat trouvé pour {recherche}.')
             logger.info(f"Aucun résultat trouvé pour la recherche '{recherche}' par {interaction.user}")
     except Exception as e:
         await interaction.response.send_message(f"Une erreur s'est produite lors de la recherche: {e}")
@@ -162,7 +185,7 @@ async def wikipedia_function(interaction: discord.Interaction, recherche: str):
             await interaction.response.send_message(f'Voici un lien vers l\'article Wikipedia correspondant: {article_url}')
             logger.info(f"Commande exécutée par {interaction.user}: Wikipedia. Recherche: {recherche}. Article: {article_title}")
         else:
-            await interaction.response.send_message('Aucun résultat trouvé sur Wikipedia.')
+            await interaction.response.send_message(f'Aucun résultat trouvé pour {recherche}.')
             logger.info(f"Aucun résultat trouvé sur Wikipedia pour la recherche '{recherche}' par {interaction.user}")
     except Exception as e:
         await interaction.response.send_message(f"Une erreur s'est produite lors de la recherche sur Wikipedia: {e}")
